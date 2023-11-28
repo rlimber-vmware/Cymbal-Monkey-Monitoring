@@ -33,6 +33,22 @@ void get_cpu_usage(FILE *output_file) {
     fclose(fp);
 }
 
+void get_hostname(FILE *output_file){
+
+    FILE *fp;
+    char buffer[1024];
+    
+    fp = fopen("/etc/hostname", "r");
+    if (fp == NULL) {
+        perror("Error opening /etc/hostname");
+    }
+    fgets(buffer, sizeof(buffer), fp);
+    fprintf(output_file,"%s", buffer);
+
+    fclose(fp);
+
+}
+
 void get_memory_usage(FILE *output_file) {
     FILE *fp;
     char buffer[1024];
@@ -62,25 +78,48 @@ void get_memory_usage(FILE *output_file) {
     fclose(fp);
 }
 
-int main() {
-    
+void create_output_file(){
     FILE *output_file;
+    FILE *fp;
+    char buffer[1024];
+
+    fp = fopen("/etc/hostname", "r");
+    if (fp == NULL) {
+        perror("Error opening /etc/hostname");
+    }
+    fgets(buffer, sizeof(buffer), fp);
     
-    while(1){
-    // Open a file for writing (replace "output.txt" with your desired file name)
-    output_file = fopen("/root/output.txt", "w"); //path of the output file
+    // Remove newline character if present
+    size_t len = strlen(buffer);
+    if (len > 0 && buffer[len - 1] == '\n') {
+        buffer[len - 1] = '\0';
+    }
+    char filename[256] = "";
+    strcat(filename, "/root/");
+    strcat(filename, buffer);
+    strcat(filename, ".txt");
+
+    output_file = fopen(filename, "w"); //path of the output file
     if (output_file == NULL) {
         perror("Error opening output file");
         exit(1);
     }
 
     // Call functions to retrieve and store usage information
+    get_hostname(output_file);
     get_cpu_usage(output_file);
     get_memory_usage(output_file);
-    
+
 
     // Close the output file
     fclose(output_file);
+
+}
+
+int main() {
+    
+    while(1){
+    create_output_file();
     sleep(5);
     }
     return 0;
